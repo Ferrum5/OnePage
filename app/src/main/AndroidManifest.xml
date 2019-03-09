@@ -1,0 +1,22 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.github.waterpeak.onepage.example">
+
+    <application
+            android:label="OnePage"
+            android:icon="@mipmap/ic_launcher"
+            android:theme="@style/Theme.AppCompat.Light">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity android:name=".HostActivity"
+                  android:launchMode="singleTask"
+                  android:windowSoftInputMode="adjustPan|stateHidden"/>
+    </application>
+</manifest>
