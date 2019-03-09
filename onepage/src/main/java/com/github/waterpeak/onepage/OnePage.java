@@ -79,6 +79,14 @@ public abstract class OnePage extends ContextWrapper
         mHost.unwind();
     }
 
+    protected void unwind(){
+        mHost.unwind();
+    }
+
+    protected void onUnwindFromPage(OnePage page){
+
+    }
+
     protected void navigate(OnePage page) {
         mHost.navigate(page);
     }

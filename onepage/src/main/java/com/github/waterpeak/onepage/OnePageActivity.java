@@ -74,6 +74,7 @@ public abstract class OnePageActivity extends AppCompatActivity {
         afterTop.onStart();
         mContainerLayout.addView(afterTop.mContentView);
         afterTop.onResume();
+        afterTop.onUnwindFromPage(top);
         mContainerLayout.removeView(top.mContentView);
         top.onStop();
         top.onDestroy();
