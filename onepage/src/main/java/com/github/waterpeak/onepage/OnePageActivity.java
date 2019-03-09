@@ -2,7 +2,6 @@ package com.github.waterpeak.onepage;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.FrameLayout;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -68,6 +67,10 @@ public abstract class OnePageActivity extends AppCompatActivity {
     }
 
     void unwind() {
+        if(mPageStack.size()<2){
+            finish();
+            return;
+        }
         OnePage top = mPageStack.removeFirst();
         OnePage afterTop = mPageStack.peek();
         top.onPause();
@@ -119,7 +122,7 @@ public abstract class OnePageActivity extends AppCompatActivity {
     }
 
 
-    protected void removePages(OnePagePredicate predicate) {
+    public void removePages(OnePagePredicate predicate) {
         Iterator<OnePage> iterator = mPageStack.iterator();
         while (iterator.hasNext()) {
             OnePage page = iterator.next();

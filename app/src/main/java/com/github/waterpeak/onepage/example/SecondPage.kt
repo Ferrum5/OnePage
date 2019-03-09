@@ -14,9 +14,12 @@ class SecondPage : BasePage(){
                 managed by OnePage.
                 You had navigated from
                 frist page.
-                Click back button to
-                unwind
+                Click to unwind
+                Click back button to go back
             """.trimIndent()
+            setOnClickListener {
+                unwind()
+            }
         }.lparams{
             gravity = Gravity.CENTER
             horizontalMargin = dip(50)
