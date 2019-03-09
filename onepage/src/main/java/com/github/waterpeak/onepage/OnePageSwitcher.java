@@ -14,12 +14,12 @@ import androidx.viewpager.widget.PagerAdapter;
 
 public class OnePageSwitcher implements LifecycleObserver {
 
-    private final FrameLayout container;
+    private final OnePageContainerLayout container;
     private final OnePage pages[];
     private int index = -1;
 
     public OnePageSwitcher(@NonNull OnePageActivity host,
-                           @NonNull FrameLayout container,
+                           @NonNull OnePageContainerLayout container,
                            @NonNull OnePage... pages) {
         this.container = container;
         this.pages = pages;
@@ -37,17 +37,21 @@ public class OnePageSwitcher implements LifecycleObserver {
             }
             OnePage target = pages[index];
             target.onStart();
-            container.addView(target.getContentView());
+            container.addView(target.mContentView);
             if (current != null) {
                 current.onPause();
             }
             target.onResume();
             if (current != null) {
-                container.removeView(current.getContentView());
+                container.removeView(current.mContentView);
                 current.onStop();
             }
             this.index = index;
         }
+    }
+
+    public int getIndex(){
+        return index;
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
@@ -103,16 +107,16 @@ public class OnePageSwitcher implements LifecycleObserver {
             public Object instantiateItem(@NonNull ViewGroup container, int position) {
                 OnePage page = pages[position];
                 page.onStart();
-                container.addView(page.getContentView());
+                container.addView(page.mContentView);
                 page.onResume();
-                return page.getContentView();
+                return page.mContentView;
             }
 
             @Override
             public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
                 OnePage page = pages[position];
                 page.onPause();
-                container.removeView(page.getContentView());
+                container.removeView(page.mContentView);
                 page.onStop();
             }
         };

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.Space;
 
 import androidx.annotation.NonNull;
@@ -12,6 +13,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LifecycleRegistry;
+
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
 
 public abstract class OnePage extends ContextWrapper
@@ -26,20 +29,10 @@ public abstract class OnePage extends ContextWrapper
         mRegistry.markState(Lifecycle.State.INITIALIZED);
     }
 
-    private View mContentView;
+    View mContentView;
 
-    View getContentView() {
-        if (mContentView == null) {
-            mContentView = onCreateContentView(mHost);
-        }
-        if (mContentView == null) {
-            mContentView = new View(mHost);
-        }
-        return mContentView;
-    }
-
-    @Nullable
-    protected abstract View onCreateContentView(@NonNull  Context context);
+    @NonNull
+    protected abstract View onCreateContentView(@NonNull Context context);
 
     @NonNull
     @Override
@@ -59,6 +52,7 @@ public abstract class OnePage extends ContextWrapper
 
     protected void onCreate() {
         mRegistry.markState(Lifecycle.State.CREATED);
+        mContentView = onCreateContentView(mHost);
     }
 
     protected void onStart() {

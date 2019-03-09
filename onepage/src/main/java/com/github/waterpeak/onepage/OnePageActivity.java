@@ -14,18 +14,19 @@ import androidx.appcompat.app.AppCompatActivity;
 public abstract class OnePageActivity extends AppCompatActivity {
 
     private LinkedList<OnePage> mPageStack;
-    private FrameLayout mContainerLayout;
+    private OnePageContainerLayout mContainerLayout;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mPageStack = new LinkedList<>();
-        mContainerLayout = findViewById(android.R.id.content);
+        mContainerLayout = new OnePageContainerLayout(this);
+        setContentView(mContainerLayout);
         OnePage first = createFirstPage();
         first.attachHost(this);
         mPageStack.addFirst(first);
         first.onCreate();
-        mContainerLayout.addView(first.getContentView());
+        mContainerLayout.addView(first.mContentView);
     }
 
     protected abstract OnePage createFirstPage();
@@ -59,7 +60,7 @@ public abstract class OnePageActivity extends AppCompatActivity {
         super.onDestroy();
         if (!mPageStack.isEmpty()) {
             mContainerLayout.removeAllViews();
-            for(OnePage page: mPageStack){
+            for (OnePage page : mPageStack) {
                 page.onDestroy();
             }
             mPageStack.clear();
@@ -71,14 +72,14 @@ public abstract class OnePageActivity extends AppCompatActivity {
         OnePage afterTop = mPageStack.peek();
         top.onPause();
         afterTop.onStart();
-        mContainerLayout.addView(afterTop.getContentView());
+        mContainerLayout.addView(afterTop.mContentView);
         afterTop.onResume();
-        mContainerLayout.removeView(top.getContentView());
+        mContainerLayout.removeView(top.mContentView);
         top.onStop();
         top.onDestroy();
     }
 
-    void navigate(OnePage page){
+    void navigate(OnePage page) {
         navigate(page, true);
     }
 
@@ -89,10 +90,10 @@ public abstract class OnePageActivity extends AppCompatActivity {
         page.attachHost(this);
         page.onCreate();
         page.onStart();
-        mContainerLayout.addView(page.getContentView());
+        mContainerLayout.addView(page.mContentView);
         page.onResume();
-        if(removeLast) {
-            mContainerLayout.removeView(top.getContentView());
+        if (removeLast) {
+            mContainerLayout.removeView(top.mContentView);
         }
         top.onStop();
     }
