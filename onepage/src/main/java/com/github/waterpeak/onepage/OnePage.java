@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.Space;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,9 +11,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LifecycleRegistry;
-
-import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-
 
 public abstract class OnePage extends ContextWrapper
         implements LifecycleOwner, ActivityCompat.OnRequestPermissionsResultCallback {
@@ -45,7 +40,7 @@ public abstract class OnePage extends ContextWrapper
 
     }
 
-    public void attachHost(OnePageActivity host) {
+    public void attachHost(@NonNull OnePageActivity host) {
         attachBaseContext(host);
         this.mHost = host;
     }
@@ -83,14 +78,22 @@ public abstract class OnePage extends ContextWrapper
         mHost.unwind();
     }
 
-    protected void onUnwindFromPage(OnePage page){
+    protected void onUnwindFromPage(@NonNull OnePage page){
 
     }
 
-    protected void navigate(OnePage page) {
-        mHost.navigate(page);
+    protected void navigateAndRemove(@NonNull OnePage page) {
+        mHost.navigate(page, true, false);
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void navigateKeepView(@NonNull OnePage page) {
+        mHost.navigate(page,false,true);
     }
+
+    protected void navigate(@NonNull OnePage page) {
+        mHost.navigate(page,true,true);
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) { }
+
 }

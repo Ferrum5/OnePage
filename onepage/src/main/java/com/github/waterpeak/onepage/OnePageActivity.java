@@ -3,8 +3,10 @@ package com.github.waterpeak.onepage;
 import android.content.Intent;
 import android.os.Bundle;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,13 +23,16 @@ public abstract class OnePageActivity extends AppCompatActivity {
         mPageStack = new LinkedList<>();
         mContainerLayout = new OnePageContainerLayout(this);
         setContentView(mContainerLayout);
-        OnePage first = createFirstPage();
-        first.attachHost(this);
+        final OnePage first = createFirstPage();
         mPageStack.addFirst(first);
-        first.onCreate();
+        if (first.getBaseContext() == null) {
+            first.attachHost(this);
+            first.onCreate();
+        }
         mContainerLayout.addView(first.mContentView);
     }
 
+    @NonNull
     protected abstract OnePage createFirstPage();
 
     @Override
@@ -67,12 +72,12 @@ public abstract class OnePageActivity extends AppCompatActivity {
     }
 
     void unwind() {
-        if(mPageStack.size()<2){
+        if (mPageStack.size() < 2) {
             finish();
             return;
         }
-        OnePage top = mPageStack.removeFirst();
-        OnePage afterTop = mPageStack.peek();
+        final OnePage top = mPageStack.removeFirst();
+        final OnePage afterTop = mPageStack.getFirst();
         top.onPause();
         afterTop.onStart();
         mContainerLayout.addView(afterTop.mContentView);
@@ -83,29 +88,35 @@ public abstract class OnePageActivity extends AppCompatActivity {
         top.onDestroy();
     }
 
-    void navigate(OnePage page) {
-        navigate(page, true);
-    }
-
-    void navigate(OnePage page, boolean removeLast) {
-        OnePage top = mPageStack.peek();
+    void navigate(OnePage page, boolean removeLastView, boolean keepInStack) {
+        final OnePage top;
+        if (keepInStack) {
+            top = mPageStack.getFirst();
+        } else {
+            top = mPageStack.removeFirst();
+        }
         top.onPause();
         mPageStack.addFirst(page);
-        page.attachHost(this);
-        page.onCreate();
+        if (page.getBaseContext() == null) {
+            page.attachHost(this);
+            page.onCreate();
+        }
         page.onStart();
         mContainerLayout.addView(page.mContentView);
         page.onResume();
-        if (removeLast) {
+        if (removeLastView || (!keepInStack)) {
             mContainerLayout.removeView(top.mContentView);
         }
         top.onStop();
+        if (!keepInStack) {
+            top.onDestroy();
+        }
     }
 
     @Override
     public void onBackPressed() {
         if (mPageStack.size() > 1) {
-            mPageStack.peek().onBackPressed();
+            mPageStack.getFirst().onBackPressed();
         } else {
             super.onBackPressed();
         }
@@ -113,16 +124,16 @@ public abstract class OnePageActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        mPageStack.peek().onRequestPermissionsResult(requestCode, permissions, grantResults);
+        mPageStack.getFirst().onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        mPageStack.peek().onActivityResult(requestCode, resultCode, data);
+        mPageStack.getFirst().onActivityResult(requestCode, resultCode, data);
     }
 
 
-    public void removePages(OnePagePredicate predicate) {
+    public void removePages(@NonNull OnePagePredicate predicate) {
         Iterator<OnePage> iterator = mPageStack.iterator();
         while (iterator.hasNext()) {
             OnePage page = iterator.next();
@@ -131,5 +142,26 @@ public abstract class OnePageActivity extends AppCompatActivity {
                 page.onDestroy();
             }
         }
+    }
+
+    @Nullable
+    public OnePage getPage(@NonNull OnePagePredicate predicate) {
+        for (OnePage page : mPageStack) {
+            if (predicate.predicate(page)) {
+                return page;
+            }
+        }
+        return null;
+    }
+
+    @NonNull
+    public List<OnePage> getPages(@NonNull OnePagePredicate predicate) {
+        List<OnePage> result = new ArrayList<>();
+        for (OnePage page : mPageStack) {
+            if (predicate.predicate(page)) {
+                result.add(page);
+            }
+        }
+        return result;
     }
 }

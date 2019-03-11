@@ -35,12 +35,12 @@ public class OnePageSwitcher implements LifecycleObserver {
             if (this.index >= 0) {
                 current = pages[this.index];
             }
-            OnePage target = pages[index];
-            target.onStart();
-            container.addView(target.mContentView);
             if (current != null) {
                 current.onPause();
             }
+            OnePage target = pages[index];
+            target.onStart();
+            container.addView(target.mContentView);
             target.onResume();
             if (current != null) {
                 container.removeView(current.mContentView);
@@ -89,6 +89,7 @@ public class OnePageSwitcher implements LifecycleObserver {
         }
     }
 
+    @NonNull
     public PagerAdapter getAdapter() {
         return new PagerAdapter() {
 
