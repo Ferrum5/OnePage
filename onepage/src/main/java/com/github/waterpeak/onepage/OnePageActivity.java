@@ -34,8 +34,9 @@ public abstract class OnePageActivity extends AppCompatActivity implements IOneP
     protected void onStart() {
         super.onStart();
         currentLifeStatusStart = false;
-        if (!mPageStack.isEmpty()) {
-            mPageStack.peek().onStart();
+        final OnePage page = mPageStack.peek();
+        if (page != null) {
+            page.onStart();
         }
     }
 
@@ -43,8 +44,9 @@ public abstract class OnePageActivity extends AppCompatActivity implements IOneP
     protected void onStop() {
         super.onStop();
         currentLifeStatusStart = true;
-        if (!mPageStack.isEmpty()) {
-            mPageStack.peek().onStop();
+        final OnePage page = mPageStack.peek();
+        if (page != null) {
+            page.onStop();
         }
     }
 
@@ -52,8 +54,9 @@ public abstract class OnePageActivity extends AppCompatActivity implements IOneP
     protected void onResume() {
         super.onResume();
         currentLifeStatusResume = true;
-        if (!mPageStack.isEmpty()) {
-            mPageStack.peek().onResume();
+        final OnePage page = mPageStack.peek();
+        if (page != null) {
+            page.onResume();
         }
     }
 
@@ -61,8 +64,9 @@ public abstract class OnePageActivity extends AppCompatActivity implements IOneP
     protected void onPause() {
         super.onPause();
         currentLifeStatusResume = false;
-        if (!mPageStack.isEmpty()) {
-            mPageStack.peek().onPause();
+        final OnePage page = mPageStack.peek();
+        if (page != null) {
+            page.onPause();
         }
     }
 
@@ -71,7 +75,7 @@ public abstract class OnePageActivity extends AppCompatActivity implements IOneP
         super.onDestroy();
         if (!mPageStack.isEmpty()) {
             mContainerLayout.removeAllViews();
-            mPageStack.clear();
+            mPageStack.onDestroy();
         }
     }
 
@@ -85,11 +89,12 @@ public abstract class OnePageActivity extends AppCompatActivity implements IOneP
             mPageStack.remove(from);
             return;
         }
+        mPageStack.pop();
         final OnePage afterTop = mPageStack.peek();
         if (currentLifeStatusResume) {
             top.onPause();
         }
-        if(currentLifeStatusStart){
+        if (currentLifeStatusStart) {
             afterTop.onStart();
         }
         mContainerLayout.addView(afterTop.mContentView);
@@ -112,7 +117,7 @@ public abstract class OnePageActivity extends AppCompatActivity implements IOneP
         }
         mPageStack.push(page);
         page.createInternal(this);
-        if(currentLifeStatusStart) {
+        if (currentLifeStatusStart) {
             page.onStart();
         }
         mContainerLayout.addView(page.mContentView);
@@ -122,7 +127,7 @@ public abstract class OnePageActivity extends AppCompatActivity implements IOneP
         if (!page.doNotRemoveLastView()) {
             mContainerLayout.removeView(top.mContentView);
         }
-        if(currentLifeStatusStart) {
+        if (currentLifeStatusStart) {
             top.onStop();
         }
     }
@@ -134,7 +139,7 @@ public abstract class OnePageActivity extends AppCompatActivity implements IOneP
 
     @Override
     public void onBackPressed() {
-        if (mPageStack.size() > 1) {
+        if (!mPageStack.isEmpty()) {
             mPageStack.peek().onBackPressed();
         } else {
             super.onBackPressed();

@@ -17,13 +17,13 @@ public class OnePageStack implements Iterable<OnePage> {
         this.host = host;
     }
 
-    public void push(@NonNull OnePage page) {
+    void push(@NonNull OnePage page) {
         first = new Node(page, first);
         size++;
     }
 
     @Nullable
-    public OnePage pop() {
+    OnePage pop() {
         final Node node = this.first;
         if (node != null) {
             this.first = node.next;
@@ -132,11 +132,13 @@ public class OnePageStack implements Iterable<OnePage> {
         }
     }
 
-    public void clear() {
-        if (first != null) {
-            first.next = null;
-            host.handlePageFinish(first.page);
+    void onDestroy() {
+        Node node = first;
+        while (node != null) {
+            node.page.destroyInternal();
+            node = node.next;
         }
+
     }
 
     private static class Node {
