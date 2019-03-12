@@ -14,6 +14,7 @@ import androidx.viewpager.widget.PagerAdapter;
 
 public class OnePageSwitcher implements LifecycleObserver {
 
+    private final OnePageActivity mHost;
     private final OnePageContainerLayout container;
     private final OnePage pages[];
     private int index = -1;
@@ -21,12 +22,9 @@ public class OnePageSwitcher implements LifecycleObserver {
     public OnePageSwitcher(@NonNull OnePageActivity host,
                            @NonNull OnePageContainerLayout container,
                            @NonNull OnePage... pages) {
+        mHost = host;
         this.container = container;
         this.pages = pages;
-        for (OnePage page : pages) {
-            page.attachHost(host);
-            page.onCreate();
-        }
     }
 
     public void setIndex(int index) {
@@ -39,6 +37,7 @@ public class OnePageSwitcher implements LifecycleObserver {
                 current.onPause();
             }
             OnePage target = pages[index];
+            target.createInternal(mHost);
             target.onStart();
             container.addView(target.mContentView);
             target.onResume();
@@ -50,42 +49,53 @@ public class OnePageSwitcher implements LifecycleObserver {
         }
     }
 
-    public int getIndex(){
+    public int getIndex() {
         return index;
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     public void onStart() {
         if (index >= 0) {
-            pages[index].onStart();
+            if (pages[index].hasCreated()) {
+                pages[index].onStart();
+            }
+
         }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     public void onResume() {
         if (index >= 0) {
-            pages[index].onResume();
+            if (pages[index].hasCreated()) {
+                pages[index].onResume();
+            }
         }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     public void onPause() {
         if (index >= 0) {
-            pages[index].onPause();
+            if (pages[index].hasCreated()) {
+                pages[index].onPause();
+            }
         }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     public void onStop() {
         if (index >= 0) {
-            pages[index].onStop();
+            if (pages[index].hasCreated()) {
+                pages[index].onStop();
+            }
         }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     public void onDestroy() {
         for (OnePage page : pages) {
-            page.onDestroy();
+            if (page.isCreated() && !page.isDestroyed()) {
+                page.onDestroy();
+            }
         }
     }
 
@@ -107,6 +117,7 @@ public class OnePageSwitcher implements LifecycleObserver {
             @Override
             public Object instantiateItem(@NonNull ViewGroup container, int position) {
                 OnePage page = pages[position];
+                page.createInternal(mHost);
                 page.onStart();
                 container.addView(page.mContentView);
                 page.onResume();

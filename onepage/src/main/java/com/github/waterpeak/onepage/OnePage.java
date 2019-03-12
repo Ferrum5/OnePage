@@ -1,10 +1,10 @@
 package com.github.waterpeak.onepage;
 
-import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
-import android.view.View;
+import android.view.*;
 
+import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -12,11 +12,31 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LifecycleRegistry;
 
-public abstract class OnePage extends ContextWrapper
-        implements LifecycleOwner, ActivityCompat.OnRequestPermissionsResultCallback {
+import java.util.Iterator;
+import java.util.List;
+
+public class OnePage extends ContextWrapper
+        implements LifecycleOwner, ActivityCompat.OnRequestPermissionsResultCallback,IOnePage{
 
     private final LifecycleRegistry mRegistry;
     protected OnePageActivity mHost;
+
+    private boolean destroyed = false;
+
+    public boolean isDestroyed(){
+        return destroyed;
+    }
+    public void setDestroyed(boolean value){
+        this.destroyed = value;
+    }
+
+    public boolean isCreated(){
+        return getBaseContext() != null;
+    }
+
+    protected boolean doNotRemoveLastView(){
+        return false;
+    }
 
     public OnePage() {
         super(null);
@@ -24,10 +44,7 @@ public abstract class OnePage extends ContextWrapper
         mRegistry.markState(Lifecycle.State.INITIALIZED);
     }
 
-    View mContentView;
-
-    @NonNull
-    protected abstract View onCreateContentView(@NonNull Context context);
+    FrameLayout mContentView;
 
     @NonNull
     @Override
@@ -40,14 +57,45 @@ public abstract class OnePage extends ContextWrapper
 
     }
 
+    public void setContentView(View view) {
+        if (mContentView.getChildCount() > 0) {
+            mContentView.removeAllViews();
+        }
+        mContentView.addView(view);
+    }
+
+    public void setContentView(View view, FrameLayout.LayoutParams params) {
+        if (mContentView.getChildCount() > 0) {
+            mContentView.removeAllViews();
+        }
+        mContentView.addView(view, params);
+    }
+
+
     public void attachHost(@NonNull OnePageActivity host) {
         attachBaseContext(host);
         this.mHost = host;
+        mContentView = new FrameLayout(host);
+    }
+
+
+
+    void createInternal(OnePageActivity host){
+        if(!isCreated()){
+            attachHost(host);
+            mHost = host;
+            onCreate();
+        }
+    }
+
+    void destroyInternal(){
+        if(destroyed){
+            onDestroy();
+        }
     }
 
     protected void onCreate() {
         mRegistry.markState(Lifecycle.State.CREATED);
-        mContentView = onCreateContentView(mHost);
     }
 
     protected void onStart() {
@@ -67,33 +115,61 @@ public abstract class OnePage extends ContextWrapper
     }
 
     protected void onDestroy() {
+        destroyed = true;
         mRegistry.markState(Lifecycle.State.DESTROYED);
     }
 
     protected void onBackPressed() {
-        mHost.unwind();
+        mHost.unwind(this);
     }
 
-    protected void unwind(){
-        mHost.unwind();
+    @Override
+    public void unwind() {
+        mHost.unwind(this);
     }
 
-    protected void onUnwindFromPage(@NonNull OnePage page){
+    protected void onUnwindFromPage(@NonNull OnePage page) { }
 
+
+    @Override
+    public void navigate(@NonNull OnePage page) {
+        mHost.navigate(page);
     }
 
-    protected void navigateAndRemove(@NonNull OnePage page) {
-        mHost.navigate(page, true, false);
-    }
-
-    protected void navigateKeepView(@NonNull OnePage page) {
-        mHost.navigate(page,false,true);
-    }
-
-    protected void navigate(@NonNull OnePage page) {
-        mHost.navigate(page,true,true);
+    public void navigateFinish(@NonNull OnePage page) {
+        mHost.navigate(page);
+        mHost.removePage(this);
     }
 
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) { }
 
+    public boolean hasCreated() {
+        return getBaseContext() != null;
+    }
+
+    @Override
+    public void removePage(@Nullable OnePage page) {
+        mHost.removePage(page);
+    }
+
+    public void removePages(@NonNull OnePagePredicate predicate) {
+        mHost.removePages(predicate);
+    }
+
+    @Nullable
+    @Override
+    public OnePage getPage(@NonNull OnePagePredicate predicate) {
+        return mHost.getPage(predicate);
+    }
+
+    @NonNull
+    @Override
+    public List<OnePage> getPages(@NonNull OnePagePredicate predicate) {
+        return mHost.getPages(predicate);
+    }
+
+    @Nullable
+    public OnePage topPage(){
+        return mHost.topPage();
+    }
 }

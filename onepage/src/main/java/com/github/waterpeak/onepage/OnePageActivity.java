@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-public abstract class OnePageActivity extends AppCompatActivity {
+public abstract class OnePageActivity extends AppCompatActivity implements IOnePage{
 
     private LinkedList<OnePage> mPageStack;
     private OnePageContainerLayout mContainerLayout;
@@ -25,10 +25,7 @@ public abstract class OnePageActivity extends AppCompatActivity {
         setContentView(mContainerLayout);
         final OnePage first = createFirstPage();
         mPageStack.addFirst(first);
-        if (first.getBaseContext() == null) {
-            first.attachHost(this);
-            first.onCreate();
-        }
+        first.createInternal(this);
         mContainerLayout.addView(first.mContentView);
     }
 
@@ -65,18 +62,30 @@ public abstract class OnePageActivity extends AppCompatActivity {
         if (!mPageStack.isEmpty()) {
             mContainerLayout.removeAllViews();
             for (OnePage page : mPageStack) {
-                page.onDestroy();
+                if(!page.isDestroyed()) {
+                    page.onDestroy();
+                }
             }
             mPageStack.clear();
         }
     }
 
-    void unwind() {
+    @Override
+    public void unwind() {
+        unwind(mPageStack.getFirst());
+    }
+
+    void unwind(final OnePage from){
         if (mPageStack.size() < 2) {
             finish();
             return;
         }
-        final OnePage top = mPageStack.removeFirst();
+        final OnePage top = mPageStack.getFirst();
+        if(from != top){
+            mPageStack.remove(from);
+            from.destroyInternal();
+            return;
+        }
         final OnePage afterTop = mPageStack.getFirst();
         top.onPause();
         afterTop.onStart();
@@ -88,29 +97,19 @@ public abstract class OnePageActivity extends AppCompatActivity {
         top.onDestroy();
     }
 
-    void navigate(OnePage page, boolean removeLastView, boolean keepInStack) {
-        final OnePage top;
-        if (keepInStack) {
-            top = mPageStack.getFirst();
-        } else {
-            top = mPageStack.removeFirst();
-        }
+    @Override
+    public void navigate(@NonNull OnePage page) {
+        final OnePage top = mPageStack.getFirst();
         top.onPause();
         mPageStack.addFirst(page);
-        if (page.getBaseContext() == null) {
-            page.attachHost(this);
-            page.onCreate();
-        }
+        page.createInternal(this);
         page.onStart();
         mContainerLayout.addView(page.mContentView);
         page.onResume();
-        if (removeLastView || (!keepInStack)) {
+        if(!page.doNotRemoveLastView()) {
             mContainerLayout.removeView(top.mContentView);
         }
         top.onStop();
-        if (!keepInStack) {
-            top.onDestroy();
-        }
     }
 
     @Override
@@ -132,7 +131,7 @@ public abstract class OnePageActivity extends AppCompatActivity {
         mPageStack.getFirst().onActivityResult(requestCode, resultCode, data);
     }
 
-
+    @Override
     public void removePages(@NonNull OnePagePredicate predicate) {
         Iterator<OnePage> iterator = mPageStack.iterator();
         while (iterator.hasNext()) {
@@ -144,6 +143,15 @@ public abstract class OnePageActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void removePage(@Nullable final OnePage page) {
+        mPageStack.remove(page);
+        if(page!=null){
+            page.destroyInternal();
+        }
+    }
+
+    @Override
     @Nullable
     public OnePage getPage(@NonNull OnePagePredicate predicate) {
         for (OnePage page : mPageStack) {
@@ -154,6 +162,7 @@ public abstract class OnePageActivity extends AppCompatActivity {
         return null;
     }
 
+    @Override
     @NonNull
     public List<OnePage> getPages(@NonNull OnePagePredicate predicate) {
         List<OnePage> result = new ArrayList<>();
@@ -163,5 +172,11 @@ public abstract class OnePageActivity extends AppCompatActivity {
             }
         }
         return result;
+    }
+
+    @Override
+    @Nullable
+    public OnePage topPage() {
+        return mPageStack.getFirst();
     }
 }
