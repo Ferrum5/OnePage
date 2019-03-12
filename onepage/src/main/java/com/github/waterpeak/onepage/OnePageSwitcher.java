@@ -2,11 +2,8 @@ package com.github.waterpeak.onepage;
 
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewManager;
-import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.OnLifecycleEvent;
@@ -56,7 +53,7 @@ public class OnePageSwitcher implements LifecycleObserver {
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     public void onStart() {
         if (index >= 0) {
-            if (pages[index].hasCreated()) {
+            if (pages[index].isCreated()) {
                 pages[index].onStart();
             }
 
@@ -66,7 +63,7 @@ public class OnePageSwitcher implements LifecycleObserver {
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     public void onResume() {
         if (index >= 0) {
-            if (pages[index].hasCreated()) {
+            if (pages[index].isCreated()) {
                 pages[index].onResume();
             }
         }
@@ -75,7 +72,7 @@ public class OnePageSwitcher implements LifecycleObserver {
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     public void onPause() {
         if (index >= 0) {
-            if (pages[index].hasCreated()) {
+            if (pages[index].isCreated()) {
                 pages[index].onPause();
             }
         }
@@ -84,7 +81,7 @@ public class OnePageSwitcher implements LifecycleObserver {
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     public void onStop() {
         if (index >= 0) {
-            if (pages[index].hasCreated()) {
+            if (pages[index].isCreated()) {
                 pages[index].onStop();
             }
         }

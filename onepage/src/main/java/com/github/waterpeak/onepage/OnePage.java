@@ -120,13 +120,9 @@ public class OnePage extends ContextWrapper
     }
 
     protected void onBackPressed() {
-        mHost.unwind(this);
+        mHost.handlePageFinish(this);
     }
 
-    @Override
-    public void unwind() {
-        mHost.unwind(this);
-    }
 
     protected void onUnwindFromPage(@NonNull OnePage page) { }
 
@@ -136,40 +132,15 @@ public class OnePage extends ContextWrapper
         mHost.navigate(page);
     }
 
-    public void navigateFinish(@NonNull OnePage page) {
-        mHost.navigate(page);
-        mHost.removePage(this);
+    public void finish(){
+        getPageStack().remove(this);
     }
 
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) { }
 
-    public boolean hasCreated() {
-        return getBaseContext() != null;
-    }
 
     @Override
-    public void removePage(@Nullable OnePage page) {
-        mHost.removePage(page);
-    }
-
-    public void removePages(@NonNull OnePagePredicate predicate) {
-        mHost.removePages(predicate);
-    }
-
-    @Nullable
-    @Override
-    public OnePage getPage(@NonNull OnePagePredicate predicate) {
-        return mHost.getPage(predicate);
-    }
-
-    @NonNull
-    @Override
-    public List<OnePage> getPages(@NonNull OnePagePredicate predicate) {
-        return mHost.getPages(predicate);
-    }
-
-    @Nullable
-    public OnePage topPage(){
-        return mHost.topPage();
+    public OnePageStack getPageStack() {
+        return mHost.mPageStack;
     }
 }
