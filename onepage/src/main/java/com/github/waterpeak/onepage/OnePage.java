@@ -1,5 +1,6 @@
 package com.github.waterpeak.onepage;
 
+import android.app.Activity;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.view.*;
@@ -17,6 +18,9 @@ import java.util.List;
 
 public class OnePage extends ContextWrapper
         implements LifecycleOwner, ActivityCompat.OnRequestPermissionsResultCallback,IOnePage{
+
+    protected static final int RESULT_OK = Activity.RESULT_OK;
+    protected static final int RESULT_CANCEL = Activity.RESULT_CANCELED;
 
     private final LifecycleRegistry mRegistry;
     protected OnePageActivity mHost;
@@ -142,5 +146,10 @@ public class OnePage extends ContextWrapper
     @Override
     public OnePageStack getPageStack() {
         return mHost.mPageStack;
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
     }
 }

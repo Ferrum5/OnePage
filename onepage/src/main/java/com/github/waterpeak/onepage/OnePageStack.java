@@ -52,21 +52,31 @@ public class OnePageStack implements Iterable<OnePage> {
 
 
     public void removePage(@NonNull OnePagePredicate predicate) {
-        Iterator<OnePage> iterator = iterator();
-        while (iterator.hasNext()) {
-            OnePage page = iterator.next();
-            if (predicate.predicate(page)) {
-                iterator.remove();
+        final Node head = first;
+        if (head != null) {
+            Node pre = first;
+            Node node = first.next;
+            while (node != null) {
+                if (predicate.predicate(node.page)) {
+                    pre.next = node.next;
+                    node.page.destroyInternal();
+                    node = node.next;
+                }
+            }
+            if (predicate.predicate(head.page)) {
+                host.handlePageFinish(head.page);
             }
         }
     }
 
     @Nullable
     public OnePage getPage(@NonNull OnePagePredicate predicate) {
-        for (OnePage page : this) {
-            if (predicate.predicate(page)) {
-                return page;
+        Node node = first;
+        while (node != null) {
+            if (predicate.predicate(node.page)) {
+                return node.page;
             }
+            node = node.next;
         }
         return null;
     }
@@ -74,10 +84,12 @@ public class OnePageStack implements Iterable<OnePage> {
     @NonNull
     public List<OnePage> getPages(@NonNull OnePagePredicate predicate) {
         List<OnePage> result = new ArrayList<>();
-        for (OnePage page : this) {
-            if (predicate.predicate(page)) {
-                result.add(page);
+        Node node = first;
+        while (node != null) {
+            if (predicate.predicate(node.page)) {
+                result.add(node.page);
             }
+            node = node.next;
         }
         return result;
     }
@@ -120,13 +132,16 @@ public class OnePageStack implements Iterable<OnePage> {
 
     public void remove(OnePage page) {
         Node node = first;
+        Node pre = null;
         while (node != null && node.page != page) {
+            pre = node;
             node = node.next;
         }
         if (node != null) {
             if (node == first) { //移除栈顶
                 host.handlePageFinish(node.page);
             } else {
+                pre.next = node.next;
                 node.page.destroyInternal();
             }
         }

@@ -16,6 +16,10 @@ public class OnePageSwitcher implements LifecycleObserver {
     private final OnePage pages[];
     private int index = -1;
 
+    private boolean currentLifeStatusResume = false;
+    private boolean currentLifeStatusStart = false;
+    private boolean currentLifeStatusDestroy = false;
+
     public OnePageSwitcher(@NonNull OnePageActivity host,
                            @NonNull OnePageContainerLayout container,
                            @NonNull OnePage... pages) {
@@ -25,22 +29,33 @@ public class OnePageSwitcher implements LifecycleObserver {
     }
 
     public void setIndex(int index) {
+        if(currentLifeStatusDestroy){
+            return;
+        }
         if (index != this.index) {
             OnePage current = null;
             if (this.index >= 0) {
                 current = pages[this.index];
             }
             if (current != null) {
-                current.onPause();
+                if (currentLifeStatusResume) {
+                    current.onPause();
+                }
             }
             OnePage target = pages[index];
             target.createInternal(mHost);
-            target.onStart();
+            if (currentLifeStatusStart) {
+                target.onStart();
+            }
             container.addView(target.mContentView);
-            target.onResume();
+            if (currentLifeStatusResume) {
+                target.onResume();
+            }
             if (current != null) {
                 container.removeView(current.mContentView);
-                current.onStop();
+                if (currentLifeStatusStart) {
+                    current.onStop();
+                }
             }
             this.index = index;
         }
@@ -52,6 +67,7 @@ public class OnePageSwitcher implements LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     public void onStart() {
+        currentLifeStatusStart = true;
         if (index >= 0) {
             if (pages[index].isCreated()) {
                 pages[index].onStart();
@@ -62,6 +78,7 @@ public class OnePageSwitcher implements LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     public void onResume() {
+        currentLifeStatusResume = true;
         if (index >= 0) {
             if (pages[index].isCreated()) {
                 pages[index].onResume();
@@ -71,6 +88,7 @@ public class OnePageSwitcher implements LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     public void onPause() {
+        currentLifeStatusStart = false;
         if (index >= 0) {
             if (pages[index].isCreated()) {
                 pages[index].onPause();
@@ -80,6 +98,7 @@ public class OnePageSwitcher implements LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     public void onStop() {
+        currentLifeStatusResume = false;
         if (index >= 0) {
             if (pages[index].isCreated()) {
                 pages[index].onStop();
@@ -89,9 +108,11 @@ public class OnePageSwitcher implements LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     public void onDestroy() {
+        currentLifeStatusStart = false;
+        currentLifeStatusDestroy = true;
         for (OnePage page : pages) {
-            if (page.isCreated() && !page.isDestroyed()) {
-                page.onDestroy();
+            if (page.isCreated()) {
+                page.destroyInternal();
             }
         }
     }
@@ -113,20 +134,34 @@ public class OnePageSwitcher implements LifecycleObserver {
             @NonNull
             @Override
             public Object instantiateItem(@NonNull ViewGroup container, int position) {
+                if(currentLifeStatusDestroy){
+                    return pages[position];
+                }
                 OnePage page = pages[position];
                 page.createInternal(mHost);
-                page.onStart();
+                if (currentLifeStatusStart) {
+                    page.onStart();
+                }
                 container.addView(page.mContentView);
-                page.onResume();
+                if (currentLifeStatusResume) {
+                    page.onResume();
+                }
                 return page.mContentView;
             }
 
             @Override
             public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
+                if(currentLifeStatusDestroy){
+                    return;
+                }
                 OnePage page = pages[position];
-                page.onPause();
+                if (currentLifeStatusResume) {
+                    page.onPause();
+                }
                 container.removeView(page.mContentView);
-                page.onStop();
+                if (currentLifeStatusStart) {
+                    page.onStop();
+                }
             }
         };
     }
