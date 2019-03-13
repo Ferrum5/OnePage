@@ -60,8 +60,8 @@ public class OnePageStack implements Iterable<OnePage> {
                 if (predicate.predicate(node.page)) {
                     pre.next = node.next;
                     node.page.destroyInternal();
-                    node = node.next;
                 }
+                node = node.next;
             }
             if (predicate.predicate(head.page)) {
                 host.handlePageFinish(head.page);
