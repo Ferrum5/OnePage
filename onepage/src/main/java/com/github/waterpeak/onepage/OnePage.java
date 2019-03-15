@@ -75,6 +75,10 @@ public class OnePage extends ContextWrapper
         mContentView.addView(view, params);
     }
 
+    private void addView(View view){
+        mContentView.addView(view);
+    }
+
 
     public void attachHost(@NonNull OnePageActivity host) {
         attachBaseContext(host);

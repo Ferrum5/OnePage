@@ -60,6 +60,7 @@ public class OnePageStack implements Iterable<OnePage> {
                 if (predicate.predicate(node.page)) {
                     pre.next = node.next;
                     node.page.destroyInternal();
+                    size--;
                 }
                 node = node.next;
             }
@@ -125,6 +126,7 @@ public class OnePageStack implements Iterable<OnePage> {
                 } else {
                     lastNode.next = currentNode.next;
                     currentNode.page.destroyInternal();
+                    size--;
                 }
             }
         };
@@ -143,6 +145,7 @@ public class OnePageStack implements Iterable<OnePage> {
             } else {
                 pre.next = node.next;
                 node.page.destroyInternal();
+                size--;
             }
         }
     }

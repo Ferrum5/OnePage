@@ -65,6 +65,10 @@ public class OnePageSwitcher implements LifecycleObserver {
         return index;
     }
 
+    public OnePage getCurrentPage(){
+        return pages[index];
+    }
+
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     public void onStart() {
         currentLifeStatusStart = true;
