@@ -1,2 +1,2 @@
-# Deprecated
-Since Android Q change activity behaviors, use official libaray "Navigation" in Jetpack instead.
+#OnePage
+Navigation使用的Frament太麻烦了，继续用单View切换
