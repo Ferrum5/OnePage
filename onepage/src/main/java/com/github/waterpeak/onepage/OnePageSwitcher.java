@@ -13,7 +13,7 @@ public class OnePageSwitcher implements LifecycleObserver {
 
     private final OnePageActivity mHost;
     private final OnePageContainerLayout container;
-    private final OnePage pages[];
+    private OnePage pages[];
     private int index = -1;
 
     private boolean currentLifeStatusResume = false;
@@ -25,6 +25,10 @@ public class OnePageSwitcher implements LifecycleObserver {
                            @NonNull OnePage... pages) {
         mHost = host;
         this.container = container;
+        this.pages = pages;
+    }
+
+    public void setPages(OnePage pages[]){
         this.pages = pages;
     }
 
