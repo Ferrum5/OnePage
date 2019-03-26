@@ -3,7 +3,6 @@ package com.github.waterpeak.onepage;
 import android.app.Activity;
 import android.content.ContextWrapper;
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.*;
 
 import android.widget.FrameLayout;
@@ -14,11 +13,8 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LifecycleRegistry;
 
-import java.util.Iterator;
-import java.util.List;
-
 public class OnePage extends ContextWrapper
-        implements LifecycleOwner, ActivityCompat.OnRequestPermissionsResultCallback,IOnePage{
+        implements LifecycleOwner, ActivityCompat.OnRequestPermissionsResultCallback,IOnePage, IOnePageHost{
 
     protected static final int RESULT_OK = Activity.RESULT_OK;
     protected static final int RESULT_CANCEL = Activity.RESULT_CANCELED;
@@ -26,13 +22,13 @@ public class OnePage extends ContextWrapper
     private final LifecycleRegistry mRegistry;
     protected OnePageActivity mHost;
 
-    private boolean destroyed = false;
+    private boolean isDestroyed = false;
 
     public boolean isDestroyed(){
-        return destroyed;
+        return isDestroyed;
     }
     public void setDestroyed(boolean value){
-        this.destroyed = value;
+        this.isDestroyed = value;
     }
 
     public boolean isCreated(){
@@ -49,7 +45,43 @@ public class OnePage extends ContextWrapper
         mRegistry.markState(Lifecycle.State.INITIALIZED);
     }
 
-    FrameLayout mContentView;
+    OnePageContainerLayout mContentView;
+    private OnePageManager childPageManager;
+
+    protected OnePageContainerLayout getPageContainer(){
+        return mContentView;
+    }
+
+    @Override
+    public void doAfterLastPageFinished() {
+        mHost.getPageManager().handlePageFinish(this);
+    }
+
+    @Override
+    public OnePageActivity getHostActivity() {
+        return mHost.getHostActivity();
+    }
+
+    @Override
+    public ViewGroup getContainer() {
+        return mContentView;
+    }
+
+    @Override
+    public OnePageManager getPageManager() {
+        return mHost.getPageManager();
+    }
+
+    protected OnePageManager getChildPageManager(){
+        if(childPageManager==null){
+            childPageManager = new OnePageManager(this);
+        }
+        return childPageManager;
+    }
+
+    protected void setChildPageManager(OnePageManager manager){
+        this.childPageManager = manager;
+    }
 
     @NonNull
     @Override
@@ -80,7 +112,7 @@ public class OnePage extends ContextWrapper
     public void attachHost(@NonNull OnePageActivity host) {
         attachBaseContext(host);
         this.mHost = host;
-        mContentView = new FrameLayout(host);
+        mContentView = new OnePageContainerLayout(host);
     }
 
 
@@ -94,7 +126,7 @@ public class OnePage extends ContextWrapper
     }
 
     void destroyInternal(){
-        if(destroyed){
+        if(!isDestroyed){
             onDestroy();
         }
     }
@@ -105,27 +137,47 @@ public class OnePage extends ContextWrapper
 
     protected void onStart() {
         mRegistry.markState(Lifecycle.State.STARTED);
+        if(childPageManager!=null){
+            childPageManager.onStart();
+        }
     }
 
     protected void onResume() {
         mRegistry.markState(Lifecycle.State.RESUMED);
+        if(childPageManager!=null){
+            childPageManager.onResume();
+        }
     }
 
     protected void onPause() {
         mRegistry.markState(Lifecycle.State.STARTED);
+        if(childPageManager!=null){
+            childPageManager.onPause();
+        }
     }
 
     protected void onStop() {
         mRegistry.markState(Lifecycle.State.CREATED);
+        if(childPageManager!=null){
+            childPageManager.onStop();
+        }
     }
 
     protected void onDestroy() {
-        destroyed = true;
+        isDestroyed = true;
         mRegistry.markState(Lifecycle.State.DESTROYED);
+        if(childPageManager!=null){
+            childPageManager.onDestroy();
+        }
     }
 
     protected void onBackPressed() {
-        mHost.handlePageFinish(this);
+        if(childPageManager!=null){
+            if(childPageManager.onBackPressed()){
+                return;
+            }
+        }
+        mHost.getPageManager().handlePageFinish(this);
     }
 
 
@@ -138,16 +190,10 @@ public class OnePage extends ContextWrapper
     }
 
     public void finish(){
-        getPageStack().remove(this);
+        getPageManager().remove(this);
     }
 
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) { }
-
-
-    @Override
-    public OnePageStack getPageStack() {
-        return mHost.mPageStack;
-    }
 
     @Override
     protected void finalize() throws Throwable {
