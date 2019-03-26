@@ -38,6 +38,11 @@ public abstract class OnePageActivity extends AppCompatActivity implements IOneP
     }
 
     @Override
+    public void childPageNotHandleBackPressed(OnePage page) {
+        mPageManager.handlePageFinish(page);
+    }
+
+    @Override
     protected void onStart() {
         super.onStart();
         mPageManager.onStart();

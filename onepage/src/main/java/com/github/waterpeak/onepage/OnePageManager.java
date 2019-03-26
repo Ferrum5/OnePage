@@ -41,7 +41,7 @@ public class OnePageManager implements Iterable<OnePage>, IOnePage, LifecycleObs
             top.onPause();
         }
         push(page);
-        page.createInternal(host.getHostActivity());
+        page.createInternal(host);
         if (currentLifeStatusStart) {
             page.onStart();
         }
@@ -67,7 +67,7 @@ public class OnePageManager implements Iterable<OnePage>, IOnePage, LifecycleObs
             top.onPause();
         }
         push(page);
-        page.createInternal(host.getHostActivity());
+        page.createInternal(host);
         if (currentLifeStatusStart) {
             page.onStart();
         }
@@ -85,7 +85,7 @@ public class OnePageManager implements Iterable<OnePage>, IOnePage, LifecycleObs
 
     public void pageResume(OnePage page, ViewGroup container) {
         if (isDestroyed) return;
-        page.createInternal(host.getHostActivity());
+        page.createInternal(host);
         if (currentLifeStatusStart) {
             page.onStart();
         }

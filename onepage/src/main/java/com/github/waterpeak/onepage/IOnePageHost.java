@@ -6,4 +6,5 @@ public interface IOnePageHost {
     void doAfterLastPageFinished();
     OnePageActivity getHostActivity();
     ViewGroup getContainer();
+    void childPageNotHandleBackPressed(OnePage page);
 }
